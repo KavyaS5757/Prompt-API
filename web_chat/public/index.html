@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Web Chat</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 40px auto; }
+    #chat { height: 400px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; border-radius: 8px; }
+    .user { color: #0066cc; margin: 8px 0; }
+    .ai { color: #2a7a2a; margin: 8px 0; }
+    input { width: 75%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    button { padding: 8px 16px; background: #0066cc; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>🤖 AI Web Chatbot</h2>
+  <div id="chat"></div>
+  <input id="input" placeholder="Type a message..." />
+  <button onclick="sendMessage()">Send</button>
+
+  <script>
+    const history = [];
+
+    async function sendMessage() {
+      const input = document.getElementById("input");
+      const msg = input.value.trim();
+      if (!msg) return;
+      input.value = "";
+
+      appendMessage("You", msg, "user");
+      history.push({ role: "user", content: msg });
+
+      const res = await fetch("/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history }),
+      });
+      const data = await res.json();
+      history.push({ role: "assistant", content: data.reply });
+      appendMessage("AI", data.reply, "ai");
+    }
+
+    function appendMessage(sender, text, cls) {
+      const div = document.createElement("div");
+      div.className = cls;
+      div.innerHTML = `<b>${sender}:</b> ${text}`;
+      const chat = document.getElementById("chat");
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    document.getElementById("input").addEventListener("keydown", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
